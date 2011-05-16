@@ -1,0 +1,186 @@
+<?php
+
+/**
+ * Implementation of hook_features_api().
+ */
+function fe_variable_features_api() {
+  return array(
+    'fe_variable_core' => array(
+      'name' => t('Core variables'),
+      'default_hook' => 'variable_core_default_values',
+      'default_file' => FEATURES_DEFAULTS_INCLUDED,
+      'feature_source' => TRUE
+    ),
+    'fe_variable_i18n' => array(
+      'name' => t('i18n variables'),
+      'default_hook' => 'variable_i18n_default_values',
+      'default_file' => FEATURES_DEFAULTS_INCLUDED,
+      'feature_source' => TRUE
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_features_export_options().
+ */
+function fe_variable_core_features_export_options() {
+  $variables_list = variable_initialize();
+  ksort($variables_list);
+  $names = array_keys($variables_list);
+  $arr = array_combine($names, $names);
+  return $arr;
+}
+
+/**
+ * Implementation of hook_features_export_options().
+ */
+function fe_variable_i18n_features_export_options() {
+  $variables_list = i18n_variable_list();
+  sort($variables_list);
+  return array_combine($variables_list, $variables_list);
+}
+
+/**
+ * Implementation of hook_features_export().
+ */
+function fe_variable_core_features_export($data, &$export, $module_name = '') {
+  $export['dependencies']['fe_variable'] = 'fe_variable';
+
+  foreach ($data as $name) {
+    $export['features']['fe_variable_core'][$name] = $name;
+  }
+
+  $pipe = array();
+  return $pipe;
+}
+
+/**
+ * Implementation of hook_features_export().
+ */
+function fe_variable_i18n_features_export($data, &$export, $module_name = '') {
+  $export['dependencies']['fe_variable'] = 'fe_variable';
+  $export['dependencies']['i18n_variable'] = 'i18n_variable';
+
+  foreach ($data as $name) {
+    $export['features']['fe_variable_i18n'][$name] = $name;
+  }
+
+  $pipe = array();
+  return $pipe;
+}
+
+/**
+ * Implementation of hook_features_export_render().
+ */
+function fe_variable_core_features_export_render($module, $data, $export = NULL) {
+  $code = array();
+  $code[] = '  $variables_core = array();';
+  $code[] = '';
+
+  $variables_list = variable_initialize();
+
+  foreach ($data as $name) {
+    if(array_key_exists($name, $variables_list)) {
+      $variable_name = features_var_export($name);
+      $variable_value = features_var_export($variables_list[$name]);
+      $code[] = "  \$variables_core[{$variable_name}] = {$variable_value};";
+    }
+  }
+
+  $code[] = '  return $variables_core;';
+  $code = implode("\n", $code);
+  return array('variable_core_default_values' => $code);
+}
+
+/**
+ * Implementation of hook_features_export_render().
+ */
+function fe_variable_i18n_features_export_render($module, $data, $export = NULL) {
+  $code = array();
+  $code[] = '  $variables_i18n = array();';
+  $code[] = '';
+
+  foreach ($data as $name) {
+    $variable_name = features_var_export($name);
+
+    $code[] = "  \$variables_i18n[{$variable_name}] = array();";
+    $language_list = language_list();
+    foreach($language_list as $lang) {
+      $variable_value = i18n_variable_get($name, $lang->language, NULL);
+
+      if($variable_value !== NULL) {
+          $variable_value = features_var_export($variable_value);
+          $variable_language = features_var_export($lang->language);
+          $code[] = "  \$variables_i18n[{$variable_name}][{$variable_language}] = {$variable_value};";
+      }
+    }
+  }
+
+  $code[] = '  return $variables_i18n;';
+  $code = implode("\n", $code);
+  return array('variable_i18n_default_values' => $code);
+}
+
+/**
+ * Implementation of hook_features_revert().
+ */
+function fe_variable_core_features_revert($module) {
+  return fe_variable_core_features_rebuild($module);
+}
+
+/**
+ * Implementation of hook_features_revert().
+ */
+function fe_variable_i18n_features_revert($module) {
+  return fe_variable_i18n_features_rebuild($module);
+}
+
+/**
+ * Implementation of hook_features_rebuild().
+ */
+function fe_variable_core_features_rebuild($module) {
+  if ($defaults = features_get_default('fe_variable_core', $module)) {
+    foreach ($defaults as $variable_name => $variable_value) {
+      db_merge('variable')
+        ->key(array('name' => $variable_name))
+        ->fields(array('value' => serialize($variable_value)))
+        ->execute();
+    }
+
+    cache_clear_all('variables', 'cache_bootstrap');
+  }
+}
+
+/**
+ * Implementation of hook_features_rebuild().
+ */
+function fe_variable_i18n_features_rebuild($module) {
+  if ($defaults = features_get_default('fe_variable_i18n', $module)) {
+    $language_list = language_list();
+
+    foreach ($defaults as $variable_name => $values) {
+      // Mark the variable as being translated by i18n
+      $variable_conf = variable_get('i18n_variable_conf', array());
+      $variable_list = variable_get('i18n_variable_list', array());
+
+      if(!in_array($variable_name, $variable_conf)) {
+        $variable_conf[] = $variable_name;
+        variable_set('i18n_variable_conf', $variable_conf);
+      }
+
+      if(!in_array($variable_name, $variable_list)) {
+        $variable_list[] = $variable_name;
+        variable_set('i18n_variable_list', $variable_list);
+      }
+
+      // Reset the variable for languages that don't appear in the feature
+      foreach($language_list as $language) {
+        i18n_variable_del($variable_name, $language->language);
+      }
+
+      foreach($values as $language => $variable_value) {
+        i18n_variable_set($variable_name, $variable_value, $language);
+      }
+    }
+  }
+}
