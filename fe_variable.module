@@ -25,10 +25,14 @@ function fe_variable_features_api() {
  */
 function fe_variable_core_features_export_options() {
   $variables_list = variable_initialize();
+
+  if(!is_array($variables_list)) {
+      return array();
+  }
+
   ksort($variables_list);
   $names = array_keys($variables_list);
-  $arr = array_combine($names, $names);
-  return $arr;
+  return array_combine($names, $names);
 }
 
 /**
@@ -36,7 +40,13 @@ function fe_variable_core_features_export_options() {
  */
 function fe_variable_i18n_features_export_options() {
   $variables_list = i18n_variable_list();
+
+  if(!is_array($variables_list)) {
+      return array();
+  }
+
   sort($variables_list);
+
   return array_combine($variables_list, $variables_list);
 }
 
