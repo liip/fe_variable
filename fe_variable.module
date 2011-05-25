@@ -92,7 +92,13 @@ function fe_variable_core_features_export_render($module, $data, $export = NULL)
   foreach ($data as $name) {
     if(array_key_exists($name, $variables_list)) {
       $variable_name = features_var_export($name);
-      $variable_value = features_var_export($variables_list[$name]);
+      $val = array('object' => false, 'value' => $variables_list[$name]);
+
+      if(is_object($variables_list[$name])) {
+          $val['object'] = true;
+      }
+
+      $variable_value = features_var_export($val);
       $code[] = "  \$variables_core[{$variable_name}] = {$variable_value};";
     }
   }
