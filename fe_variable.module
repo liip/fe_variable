@@ -157,11 +157,13 @@ function fe_variable_i18n_features_revert($module) {
 function fe_variable_core_features_rebuild($module) {
   if ($defaults = features_get_default('fe_variable_core', $module)) {
     foreach ($defaults as $variable_name => $variable_value) {
-      if ($variable_value['object']) {
-        $variable_value = (object) $variable_value['value'];
-      }
-      else {
-        $variable_value = $variable_value['value'];
+      if (is_array($variable_value) && array_keys($variable_value) == array('object', 'value')) {
+        if ($variable_value['object']) {
+          $variable_value = (object) $variable_value['value'];
+        }
+        else {
+          $variable_value = $variable_value['value'];
+        }
       }
       db_merge('variable')
         ->key(array('name' => $variable_name))
