@@ -6,9 +6,9 @@ More on why and how to use Drupal Features module: [here](https://fosswiki.liip.
 
 Dependencies
 ------------------
-[Features module](http://drupal.org/project/features)
-[Internationalization](http://drupal.org/project/i18n)
-[Variable](http://drupal.org/project/variable)
+ * [Features module](http://drupal.org/project/features)
+ * [Internationalization](http://drupal.org/project/i18n)
+ * [Variable](http://drupal.org/project/variable)
 
 Why not use Strongarm?
 ------------------
