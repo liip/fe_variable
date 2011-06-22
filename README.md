@@ -2,7 +2,13 @@ FE_VARIABLE
 ===========
 
 A Drupal 7 module to make core and i18n variables featurable.
-More on why and how to use Drupal Features module: [https://fosswiki.liip.ch/display/DRUPAL/Drupal+7+using+the+features+module]
+More on why and how to use Drupal Features module: [here](https://fosswiki.liip.ch/display/DRUPAL/Drupal+7+using+the+features+module)
+
+Dependencies
+------------------
+[Features module](http://drupal.org/project/features)
+[Internationalization](http://drupal.org/project/i18n)
+[Variable](http://drupal.org/project/variable)
 
 Why not use Strongarm?
 ------------------
