@@ -2,7 +2,9 @@ FE_VARIABLE
 ===========
 
 A Drupal 7 module to make Drupal variables featurable.
-More on why and how to use Drupal Features module: [here](https://fosswiki.liip.ch/display/DRUPAL/Drupal+7+using+the+features+module)
+More on why and how to use Drupal Features module: [here](https://fosswiki.liip.ch/display/DRUPAL/Drupal+7+using+the+features+module).
+
+If you're interested in exporting i18n variables, have a look at the [fe_variable_i18n module](https://github.com/liip/fe_variable_i18n).
 
 Dependencies
 ------------------
